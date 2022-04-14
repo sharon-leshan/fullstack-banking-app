@@ -9,7 +9,7 @@
 - TypeScript
 - JavaScript
 
-### Clone the repo `git clone https://github.com/hesbon-osoro/fullstack-banking-app.git` on your terminal
+### Clone the repo `git clone https://github.com/sharon-leshan/fullstack-banking-app.git` on your terminal
 
 ### install the node_modules using `yarn` command
 
