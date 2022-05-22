@@ -1,23 +1,30 @@
 import React from 'react';
-import {connect} from 'react-redux';
-import {Route, Switch, BrowserRouter} from 'react-router-dom';
+import { Switch, Router } from 'react-router-dom';
 import Login from '../components/Login';
 import Register from '../components/Register';
+import Profile from '../components/Profile';
+import { createBrowserHistory } from 'history';
+import Logout from '../components/Logout';
+import Account from '../components/Account';
+import PrivateRoute from './PrivateRoute';
+import PublicRoute from './PublicRoute';
 
-const AppRouter = () =>{
-    return (
-        <BrowserRouter>
-            <div className="container">
-                <Switch>
-                    <Route path="/" component={Login} exact={true}/>
-                    <Route path="/register" component={Register}/>
-                </Switch>
-            </div>
-        </BrowserRouter>
-    );
+export const history = createBrowserHistory();
+
+const AppRouter = () => {
+	return (
+		<Router history={history}>
+			<div className="container">
+				<Switch>
+					<PublicRoute path="/" component={Login} exact={true} />
+					<PublicRoute path="/register" component={Register} />
+					<PrivateRoute path="/profile" component={Profile} />
+					<PrivateRoute path="/logout" component={Logout} />
+					<PrivateRoute path="/account" component={Account} />
+				</Switch>
+			</div>
+		</Router>
+	);
 };
-const mapStateToProps = (state) => ({
-    auth: state.auth
-});
 
-export default connect(mapStateToProps)(AppRouter);
+export default AppRouter;
