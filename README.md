@@ -15,6 +15,8 @@
 
 ### start the app using `yarn start` command
 
+### Go to the server folder and do the necessary setups
+
 ## Lessons covered
 
 - How to work with PostgreSQL database from Node.js
