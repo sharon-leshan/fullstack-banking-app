@@ -6,15 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaction Report</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <script src="thousandSeparator.js"></script>
 </head>
 <body>
-    <div className="main-info">
+    <div class="main-info">
         <p><strong>Account number:</strong> <%=account.account_no%></p>
         <p><strong>Bank name:</strong> <%=account.bank_name%></p>
         <p><strong>IFSC code:</strong> <%=account.ifsc%></p>
-        <p><strong>Total available balance:</strong> <%=account.total_balance%></p>
+        <p><strong>Total available balance:</strong> {thousandSeparator(<%=account.total_balance%>)}</p>
     </div>
-    <br/>
+    <br />
     <h4>Detailed transactions between <%=start_date%> and <%=end_date%></h4>
     <table class="report-table">
         <thead>
@@ -33,7 +34,7 @@
                     <td><%=transaction.withdraw_amount%></td>
                     <td><%=transaction.balance%></td>
                 </tr>
-            <% }) %>
+                <% })%>
         </tbody>
     </table>
 </body>

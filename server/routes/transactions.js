@@ -1,4 +1,5 @@
 const express = require('express');
+const moment = require('moment');
 const authMiddleware = require('../middleware/auth');
 const { getClient } = require('../db/connect');
 const { getTransactions, generatePDF } = require('../utils/common');
@@ -6,7 +7,7 @@ const path = require('path');
 const ejs = require('ejs');
 const fs = require('fs');
 const func = require('./account');
-const moment = require('moment');
+
 const Router = express.Router();
 
 Router.post('/deposit/:id', authMiddleware, async (req, res) => {
@@ -22,20 +23,20 @@ Router.post('/deposit/:id', authMiddleware, async (req, res) => {
 		const total_balance = +result.rows[0].total_balance;
 		const total = total_balance + deposit_amount;
 		await client.query(
-			'insert into transactions(transaction_date, deposit_amount,account_id, balance) values($1,$2,$3,$4) returning *',
+			'insert into transactions(transaction_date, deposit_amount, account_id,balance) values($1,$2,$3,$4) returning *',
 			[transaction_date, deposit_amount, account_id, total]
 		);
 		await client.query(
-			'update account set total_balance=total_balance + $1 where account_id=$2',
+			'update account set total_balance=total_balance+$1 where account_id=$2',
 			[deposit_amount, account_id]
 		);
 		await client.query('commit');
-		res.send();
-	} catch (err) {
+		res.json();
+	} catch (e) {
 		await client.query('rollback');
-		res.status(400).send({
-			add_error: 'Error while depositing amount...Try again later.',
-		});
+		res
+			.status(400)
+			.json({ add_error: 'Error while depoositing amount...Try again later.' });
 	} finally {
 		client.release();
 	}
@@ -47,35 +48,29 @@ Router.post('/withdraw/:id', authMiddleware, async (req, res) => {
 		await client.query('begin');
 		const { transaction_date, withdraw_amount } = req.body;
 		const account_id = req.params.id;
-
 		const result = await client.query(
 			'select total_balance from account where account_id=$1',
 			[account_id]
 		);
 		const total_balance = +result.rows[0].total_balance;
 		const total = total_balance - withdraw_amount;
-
 		if (withdraw_amount <= total_balance) {
 			await client.query(
-				'insert into transactions(transaction_date, withdraw_amount, account_id, balance) values($1, $2, $3, $4) returning *',
+				'insert into transactions(transaction_date,withdraw_amount, account_id,balance) values($1,$2,$3,$4) returning *',
 				[transaction_date, withdraw_amount, account_id, total]
 			);
-
 			await client.query(
-				'update account set total_balance=total_balance - $1 where account_id=$2',
+				'update account set total_balance=total_balance-$1 where account_id=$2',
 				[withdraw_amount, account_id]
 			);
-
 			await client.query('commit');
 		} else {
-			return res.status(400).send({
-				withdraw_error: "You don't have enough balance in your account",
-			});
+			return res.status(400).json({ withdraw_error: 'Insufficient balance!.' });
 		}
-		res.send();
-	} catch (err) {
+		res.json();
+	} catch (e) {
 		await client.query('rollback');
-		res.status(400).send({
+		res.status(400).json({
 			withdraw_error: 'Error while withdrawing amount...Try again later.',
 		});
 	} finally {
@@ -87,10 +82,10 @@ Router.get('/transactions/:id', authMiddleware, async (req, res) => {
 	const { start_date, end_date } = req.body;
 	try {
 		const result = await getTransactions(req.params.id, start_date, end_date);
-		res.send(result.rows);
-	} catch (error) {
-		res.status(400).send({
-			transactions_error:
+		res.json(result.rows);
+	} catch (e) {
+		res.status(404).json({
+			transaction_error:
 				'Error while getting transactions list...Try again later.',
 		});
 	}
@@ -124,10 +119,11 @@ Router.get('/download/:id', authMiddleware, async (req, res) => {
 		const pdfSize = await generatePDF(basePath);
 		res.set({ 'Content-Type': 'application/pdf', 'Content-Length': pdfSize });
 		res.sendFile(path.join(basePath, 'transactions.pdf'));
-	} catch (error) {
-		res.status(400).send({
+	} catch (e) {
+		res.status(400).json({
 			transactions_error: 'Error while downloading...Try again later.',
 		});
 	}
 });
+
 module.exports = Router;

@@ -1,23 +1,21 @@
-require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db/connect');
 const puppeteer = require('puppeteer');
 const moment = require('moment');
 const path = require('path');
+require('dotenv').config();
 
-const isInvalidField = (receivedFields, validFieldsToUpdate) => {
-	return receivedFields.some(
-		field => validFieldsToUpdate.indexOf(field) === -1
-	);
-};
+const isInvalidField = (receivedFields, validFieldsToUpdate) =>
+	receivedFields.some(field => validFieldsToUpdate.indexOf(field) === -1);
 
 const validateUser = async (email, password) => {
 	const result = await pool.query(
-		'select userid, email, password from bank_user where email = $1',
+		'select userid, email,password from bank_user where email=$1',
 		[email]
 	);
 	const user = result.rows[0];
+
 	if (user) {
 		const isMatch = await bcrypt.compare(password, user.password);
 		if (isMatch) {
@@ -33,9 +31,8 @@ const validateUser = async (email, password) => {
 
 const generateAuthToken = async user => {
 	const { userid, email } = user;
-	const secret = process.env.secret;
-	const token = await jwt.sign({ userid, email }, secret);
-	return token;
+	const secret = process.env.SECRET;
+	return jwt.sign({ userid, email }, secret);
 };
 
 const getTransactions = async (account_id, start_date, end_date) => {
@@ -48,12 +45,12 @@ const getTransactions = async (account_id, start_date, end_date) => {
 			);
 		} else {
 			result = await pool.query(
-				"select to_char(transaction_date, 'YYYY-MM-DD') as formatted_date, withdraw_amount, deposit_amount,balance from transactions where account_id=$1 order by transaction_date desc",
+				"select to_char(transaction_date, 'YYYY-MM-DD') as formatted_date, withdraw_amount, deposit_amount, balance from transactions where account_id=$1 order by transaction_date desc",
 				[account_id]
 			);
 		}
 		return result;
-	} catch (err) {
+	} catch (e) {
 		throw new Error();
 	}
 };
@@ -66,7 +63,7 @@ const generatePDF = async filepath => {
 	});
 
 	await page.setViewport({ width: 1680, height: 1050 });
-	const pdfURL = path.join(filepath, 'transactions.pdf');
+	const pdfUrl = path.join(filepath, 'transactions.pdf');
 	await page.addStyleTag({
 		content: `
 	.report-table { border-collapse: collapse; width: 100%;}
@@ -74,7 +71,7 @@ const generatePDF = async filepath => {
 	.report-table th { text-align: left;}`,
 	});
 	const pdf = await page.pdf({
-		path: pdfURL,
+		path: pdfUrl,
 		format: 'A4',
 		printBackground: true,
 		displayHeaderFooter: true,
@@ -82,10 +79,10 @@ const generatePDF = async filepath => {
 			new Date()
 		).format('Do MMMM YYYY')}</div>`,
 		footerTemplate: `<div style="font-size:7px;white-space:nowrap;margin-left:38px;margin-right:35px;width:100%;">
-		<span style="display:inline-block;float:right;margin-right:10px;">
-			<span class="pageNumber"</span> / <span class="totalPages"></span>
-		</span>
-	</div>`,
+        <span style="display:inline-block;float:right;margin-right:10px;">
+        <span class="pageNumber"</span> / <span class="totalPages"></span>
+         </span>
+        </div>`,
 		margin: {
 			top: '1.2cm',
 			right: '1.2cm',
@@ -97,7 +94,6 @@ const generatePDF = async filepath => {
 
 	return pdf.length;
 };
-
 module.exports = {
 	isInvalidField,
 	validateUser,

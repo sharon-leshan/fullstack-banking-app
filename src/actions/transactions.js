@@ -1,6 +1,6 @@
 import {
-	BASE_API_URL,
 	ADD_TRANSACTION,
+	BASE_API_URL,
 	SET_TRANSACTIONS,
 } from '../utils/constants';
 import { getErrors } from './errors';
@@ -20,11 +20,12 @@ export const initiateDepositAmount = (account_id, amount) => {
 				transaction_date: new Date(),
 				deposit_amount: amount,
 			};
+
 			await post(`${BASE_API_URL}/deposit/${account_id}`, transaction);
 			dispatch(addTransaction({ ...transaction, withdraw_amount: null }));
 			dispatch(updateAccountBalance(amount, 'deposit'));
-		} catch (error) {
-			error.response && dispatch(getErrors(error.response.data));
+		} catch (e) {
+			e.response && dispatch(getErrors(e.response.data));
 		}
 	};
 };
@@ -39,8 +40,8 @@ export const initiateWithdrawAmount = (account_id, amount) => {
 			await post(`${BASE_API_URL}/withdraw/${account_id}`, transaction);
 			dispatch(addTransaction({ ...transaction, deposit_amount: null }));
 			dispatch(updateAccountBalance(amount, 'withdraw'));
-		} catch (error) {
-			error.response && dispatch(getErrors(error.response.data));
+		} catch (e) {
+			e.response && dispatch(getErrors(e.response.data));
 		}
 	};
 };
@@ -61,8 +62,8 @@ export const initiateGetTransactions = (account_id, start_date, end_date) => {
 			}
 			const profile = await get(query);
 			dispatch(setTransactions(profile.data));
-		} catch (error) {
-			error.response && dispatch(getErrors(error.response.data));
+		} catch (e) {
+			e.response && dispatch(getErrors(e.response.data));
 		}
 	};
 };
@@ -71,17 +72,19 @@ export const downloadReport = (account_id, start_date, end_date) => {
 	return async dispatch => {
 		try {
 			const result = await get(
-				`${BASE_API_URL}/download/${account_id}?start_date=${start_date}&end_date=${end_date}}`,
+				`${BASE_API_URL}/download/${account_id}?start_date=${start_date}&end_date=${end_date}`,
 				{ responseType: 'blob' }
 			);
-			return download(result.data, 'transactions.pdf', 'application/pdf');
-		} catch (error) {
-			if (error.response && error.response.status === 400) {
+			return download(result.data, `transactions ${new Date()}.pdf`);
+		} catch (e) {
+			if (e.response && e.response.status === 400) {
 				dispatch(
 					getErrors({
 						transactions_error: 'Error while downloading...Try again later.',
 					})
 				);
+			} else {
+				dispatch(getErrors(e.response.data));
 			}
 		}
 	};

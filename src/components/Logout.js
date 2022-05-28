@@ -1,15 +1,22 @@
-import React from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { connect } from 'react-redux';
 import { initiateLogout } from '../actions/auth';
 
-class Logout extends React.Component {
-	componentDidMount() {
-		const { history, dispatch } = this.props;
-		dispatch(initiateLogout()).then(() => history.push('/'));
-	}
-	render() {
-		return null;
-	}
-}
+const Logout = props => {
+	const propsRef = useRef(false);
+	const processOnMount = useCallback(() => {
+		if (propsRef.current === false) {
+			const { history, dispatch } = props;
+			dispatch(initiateLogout()).then(() => history.push('/'));
+			propsRef.current = true;
+		}
+	}, [props]);
 
-export default connect()(Logout);
+	useEffect(() => {
+		processOnMount();
+	}, [processOnMount]);
+
+	return null;
+};
+
+export default connect(Logout);

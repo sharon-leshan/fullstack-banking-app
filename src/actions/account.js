@@ -25,8 +25,8 @@ export const initiateGetAccntDetails = () => {
 		try {
 			const account = await get(`${BASE_API_URL}/account`);
 			return dispatch(setAccount(account.data));
-		} catch (err) {
-			err.response && dispatch(setAccount(err.response.data));
+		} catch (e) {
+			e.response && dispatch(setAccount(e.response.data));
 		}
 	};
 };
@@ -39,8 +39,8 @@ export const initiateAddAccntDetails = (account_no, bank_name, ifsc) => {
 				bank_name,
 				ifsc,
 			});
-		} catch (err) {
-			err.response && dispatch(getErrors(err.response.data));
+		} catch (e) {
+			e.response && dispatch(getErrors(e.response.data));
 		}
 	};
 };
@@ -50,8 +50,8 @@ export const initiateUpdateAccntDetails = ifsc => {
 		try {
 			const account = await patch(`${BASE_API_URL}/account`, { ifsc });
 			dispatch(setAccount(account.data));
-		} catch (err) {
-			err.response && dispatch(getErrors(err.response.data));
+		} catch (e) {
+			e.response && dispatch(getErrors(e.response.data));
 		}
 	};
 };

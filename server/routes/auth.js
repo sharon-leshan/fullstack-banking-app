@@ -20,41 +20,37 @@ Router.post('/signup', async (req, res) => {
 			'password',
 		];
 		const receivedFields = Object.keys(req.body);
-
 		const isInvalidFieldProvided = isInvalidField(
 			receivedFields,
 			validFieldsToUpdate
 		);
-
 		if (isInvalidFieldProvided) {
-			return res.status(400).send({
-				signup_error: 'Invalid field',
-			});
+			return res.status(400).json({ signup_error: 'Invalid field provided' });
 		}
-
 		const result = await pool.query(
 			'select count(*) as count from bank_user where email=$1',
 			[email]
 		);
-
 		const count = result.rows[0].count;
 
 		if (count > 0) {
-			return res.status(400).send({
-				signup_error: 'User with this email address already exists',
-			});
+			return res
+				.status(400)
+				.json({ signup_error: 'User with this email address already exists.' });
 		}
 		const hashedPassword = await bcrypt.hash(password, 8);
 		await pool.query(
-			'insert into bank_user(first_name, last_name, email, password) values($1,$2,$3,$4)',
+			'insert into bank_user(first_name, last_name, email,password) values($1,$2,$3,$4)',
 			[first_name, last_name, email, hashedPassword]
 		);
-		res.status(201).send();
-	} catch (err) {
-		console.log('err', err);
-		res.status(400).send({
-			signup_error: 'Error while signing up ... Try again later.',
-		});
+		res
+			.status(201)
+			.json({ signup_success: 'User account created successfully.' });
+	} catch (e) {
+		console.log('err', e);
+		res
+			.status(400)
+			.json({ signup_error: 'Error while signing up..Try again later.' });
 	}
 });
 
@@ -63,9 +59,7 @@ Router.post('/signin', async (req, res) => {
 		const { email, password } = req.body;
 		const user = await validateUser(email, password);
 		if (!user) {
-			res.status(400).send({
-				signin_error: 'Email/password does not match',
-			});
+			res.status(400).json({ signin_error: 'Email/password do not match.' });
 		}
 		const token = await generateAuthToken(user);
 		const result = await pool.query(
@@ -73,15 +67,15 @@ Router.post('/signin', async (req, res) => {
 			[token, user.userid]
 		);
 		if (!result.rows[0]) {
-			return res.status(400).send({
-				signin_error: 'Error while signing in ... Try again later.',
-			});
+			return res
+				.status(400)
+				.json({ signin_error: 'Error while signing in..Try again later.' });
 		}
 		res.cookie('token', token, { httpOnly: true });
 		user.token = result.rows[0].access_token;
-		res.send(user);
-	} catch (error) {
-		res.status(400).send({ signin_error: 'Email/password does not match' });
+		res.json(user);
+	} catch (e) {
+		res.status(400).json({ signin_error: 'Email/password do not match' });
 	}
 });
 
@@ -92,12 +86,11 @@ Router.post('/logout', authMiddleware, async (req, res) => {
 			userid,
 			access_token,
 		]);
-		res.send();
-	} catch (error) {
+		res.json();
+	} catch (e) {
 		res
 			.status(400)
-			.send({ logout_error: 'Error while logging out ... Try again later.' });
+			.json({ logout_error: 'Error while logging out...Try again later.' });
 	}
 });
-
 module.exports = Router;
