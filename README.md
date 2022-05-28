@@ -20,7 +20,7 @@
 ## Lessons covered
 
 - How to work with PostgreSQL database from Node.js
-- How to secure your APIs using JQT authentication
+- How to secure your APIs using JWT authentication
 - How to maintain login session until user manually performs a logout
 - How to perform CRUD operations in PostgreSQL from Node.js
 - How to dynamically generate pdf to get list of transactions within selected date range
